@@ -30,29 +30,32 @@ int hex_print(unsigned char *in, size_t len)
     return 0;
 }
 
-int analyzeData(uint8_t xorkey, char buffer[], uint16_t frame, uint16_t input[],
+int analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t frame, uint16_t input[],
         uint16_t SEQ, uint16_t numberOfObjetcs, unsigned char decriptedString[])
 {
-    printf("\nCurrent Frame 0x%02X\n", frame >> 1);
-    /*printf("\nXorkey: 0x%02X - Buffer[0]: 0x%02x\n", xorkey, buffer[0]);*/
-    printf("Input 0x%02X\n", input[0] | input[1]);
-    printf("SEQ 0x%02X\n", SEQ);
-    printf("Number Of Objects 0x%02X\n\n", numberOfObjetcs);
+    printf("\nCurrent Frame %d\n", frame >> 1);
+    printf("Input %d\n", input[0] | input[1]);
+    /*printf("SEQ 0x%02X\n", SEQ);*/
+    printf("Number Of Objects %d\n\n", numberOfObjetcs);
 
-    int isMyShipIntact = 1;
+    double objectsData = n - 3.0;
+    int isMyShipIntact = 0;
 
     if (numberOfObjetcs > 0x00)
     {
+        if(objectsData / numberOfObjetcs < 1.0)
+             return -1;
+
         for (int i = 1 ; i <= numberOfObjetcs ; i++)
         {
-            printf("\tObject: 0x%02X\n", i);
-            printf("\t\tType: 0x%02X\n", decriptedString[i * 3]);
+            printf("\tObject: %d\n", i);
+            printf("\t\tType: %d\n", decriptedString[i * 3]);
 
             if (decriptedString[i * 3] == 0x00)
-                isMyShipIntact--;
+                isMyShipIntact = 1;
 
-            printf("\t\tH position: 0x%02X\n", decriptedString[(i * 3) + 1]);
-            printf("\t\tV position: 0x%02X\n", decriptedString[(i * 3) + 2]);
+            printf("\t\tH position: %d\n", decriptedString[(i * 3) + 1]);
+            printf("\t\tV position: %d\n", decriptedString[(i * 3) + 2]);
         }
         printf("\n\n");
         return isMyShipIntact;
@@ -139,14 +142,16 @@ int main() {
         SEQ = decriptedString[1] & 0x7F;
         numberOfObjetcs  = decriptedString[2];
 
-        result = analyzeData(xorkey, buffer, frame, input, SEQ, numberOfObjetcs, decriptedString);
+        result = analyzeData(xorkey, buffer, n, frame, input, SEQ, numberOfObjetcs, decriptedString);
         printf("\n\n\tResult: %d\n\n", result);
 
-        if(result != 0)
+        if(result == 0)
         {
             printf("\n\n\t********** GAME OVER **********\n\n");
             break;
         }
+        else if(result == -1)
+            continue;
 
         inputPackage[0] = (((frame >> 1) + 0x01) << 1) + 0x01;
         inputPackage[1] = SEQ + 0x80;
