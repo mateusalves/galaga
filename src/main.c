@@ -63,30 +63,22 @@ void nextMove(int numberOfObjetcs, ObjectsData *objsInFrame, ShipData *ship)
                             objsInFrame->h_pos_enemyProjec[j] == objsInFrame->h_pos_enemyProjec[i] + 1)
                     {
                         if (objsInFrame->v_pos_enemyProjec[j] == 0x01)
-                        {
-                            printf("\nCASE A\n");
                             goLeft++;
-                        }
                     }
                     if (objsInFrame->h_pos_enemyProjec[i] > 0x00 &&
                             objsInFrame->h_pos_enemyProjec[j] == objsInFrame->h_pos_enemyProjec[i] - 1)
                     {
                         if (objsInFrame->v_pos_enemyProjec[j] == 0x01)
-                        {
-                            printf("\nCASE B\n");
                             goRight++;
-                        }
                     }
                     if (ship->x_coordinate == 0x08)
                     {
-                        printf("\nCASE C\n");
                         //Move right
                         ship->nextMoveA = 0x00;
                         ship->nextMoveB = 0x80;
                     }
                     if (ship->x_coordinate == 0x00)
                     {
-                        printf("\nCASE D\n");
                         //Move left
                         ship->nextMoveA = 0x01;
                         ship->nextMoveB = 0x00;
@@ -264,7 +256,7 @@ int main() {
                     MSG_WAITALL, (struct sockaddr *) &servaddr,
                     &len);
 
-        printf("Received message with size: %d\n", n);
+        printf("Received message with size: %d\n\n", n);
 
         if (n == -1)
             continue;
@@ -300,7 +292,7 @@ int main() {
         else if(myShip.status == -1)
             continue;
 
-        printf("Next Move: 0x%02X 0x%02X\n", myShip.nextMoveA, myShip.nextMoveB);
+        printf("Next Move: 0x%02X 0x%02X\n\n", myShip.nextMoveA, myShip.nextMoveB);
         inputPackage[0] = (((frame >> 1) + 0x01) << 1) + myShip.nextMoveA;
         inputPackage[1] = SEQ + myShip.nextMoveB;
         memset(&buffer, 0, n);
