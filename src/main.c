@@ -31,121 +31,206 @@ int hex_print(unsigned char *in, size_t len)
 }
 
 typedef struct{
+    int enemysProjectiles;
+    int *h_pos_enemyProjec;
+    int *v_pos_enemyProjec;
+    int enemys;
+    int *h_pos_enemys;
+    int *v_pos_enemys;
+}ObjectsData;
+
+typedef struct{
     int status;
     uint8_t type;
     uint8_t x_coordinate;
     uint8_t y_coordinate;
     uint8_t nextMoveA;
     uint8_t nextMoveB;
-}ShipCoordinates;
+}ShipData;
 
-int nextMove(int numberOfObjetcs, int *types, int *h_positions, int *v_positions, ShipCoordinates *ship)
+/*int nextMove(int numberOfObjetcs, int *types, int *h_positions, int *v_positions, ShipData *ship)*/
+int nextMove(int numberOfObjetcs, ObjectsData *objsInFrame, ShipData *ship)
 {
-    for (int i = 0; i < numberOfObjetcs; i++)
+    for (int i = 0; i < objsInFrame->enemysProjectiles; i++)
     {
-        if (types[i] == 0x03)
+        if (objsInFrame->h_pos_enemyProjec[i] == ship->x_coordinate)
         {
-            if (h_positions[i] == ship->x_coordinate)
+            if (objsInFrame->v_pos_enemyProjec[i] == 0x01)
             {
-                if (v_positions[i] <= (ship->y_coordinate + 0x02))
+                if (ship->x_coordinate == 0x08)
                 {
-                    if (ship->x_coordinate == 0x08)
-                    {
-                        //Move right
-                        ship->nextMoveA = 0x00;
-                        ship->nextMoveB = 0x80;
-                    }
-                    else
-                    {
-                        //Move left
-                        ship->nextMoveA = 0x01;
-                        ship->nextMoveB = 0x00;
-                    }
-                    break;
+                    //Move right
+                    ship->nextMoveA = 0x00;
+                    ship->nextMoveB = 0x80;
                 }
-            }
-            if (h_positions[i] == (ship->x_coordinate + 0x01))
-            {
-                if (v_positions[i] <= (ship->y_coordinate + 0x02))
+                else if (i != 0 && objsInFrame->v_pos_enemyProjec[i-1] == 0x01)
                 {
-                    if (ship->x_coordinate == 0x07)
-                    {
-                        //Dont Move
-                        ship->nextMoveA = 0x00;
-                        ship->nextMoveB = 0x00;
-                    }
-                    else
-                    {
-                        //Move left
-                        ship->nextMoveA = 0x01;
-                        ship->nextMoveB = 0x00;
-                    }
-                    break;
+                    //Move right
+                    ship->nextMoveA = 0x00;
+                    ship->nextMoveB = 0x80;
                 }
-            }
-            if (h_positions[i] == (ship->x_coordinate - 0x01))
-            {
-                if (v_positions[i] <= (ship->y_coordinate + 0x02))
+                /*else if (objsInFrame->v_pos_enemyProjec[i+1] == 0x01)*/
+                /*{*/
+                /*    //Move left*/
+                /*    ship->nextMoveA = 0x01;*/
+                /*    ship->nextMoveB = 0x00;*/
+                /*}*/
+                else
                 {
-                    if (ship->x_coordinate == 0x08)
-                    {
-                        //Dont Move
-                        ship->nextMoveA = 0x00;
-                        ship->nextMoveB = 0x00;
-                    }
-                    else
-                    {
-                        //Move left
-                        ship->nextMoveA = 0x01;
-                        ship->nextMoveB = 0x00;
-                    }
-                    break;
+                    //Move left
+                    ship->nextMoveA = 0x01;
+                    ship->nextMoveB = 0x00;
                 }
-            }
-        }
-        if (types[i] == 0x02)
-        {
-            if (h_positions[i] == ship->x_coordinate)
-            {
-                //Shoot
-                ship->nextMoveA = 0x01;
-                ship->nextMoveB = 0x80;
-            }
-            if (h_positions[i] == (ship->x_coordinate + 0x01) ||
-                    h_positions[i] == (ship->x_coordinate - 0x01))
-            {
-                //Shoot
-                ship->nextMoveA = 0x01;
-                ship->nextMoveB = 0x80;
-            }
-            else if (h_positions[i] > ship->x_coordinate)
-            {
-                //Move left
-                ship->nextMoveA = 0x01;
-                ship->nextMoveB = 0x00;
-            }
-            else
-            {
-                //Move right
-                ship->nextMoveA = 0x00;
-                ship->nextMoveB = 0x80;
+                 return 0;
             }
         }
     }
-    /*printf("Next MOVE: 0x%02X\n\n", ship->nextMoveA | ship->nextMoveB);*/
+
+    for (int i = 0; i < objsInFrame->enemys; i++)
+    {
+        if (objsInFrame->h_pos_enemys[i] == ship->x_coordinate ||
+            objsInFrame->h_pos_enemys[i] == (ship->x_coordinate + 0x01) ||
+            objsInFrame->h_pos_enemys[i] == (ship->x_coordinate - 0x01))
+            {
+                //Shoot
+                ship->nextMoveA = 0x01;
+                ship->nextMoveB = 0x80;
+            }
+            /*else if (objsInFrame->h_pos_enemys[i] > ship->x_coordinate)*/
+            /*{*/
+            /*    //Move left*/
+            /*    ship->nextMoveA = 0x01;*/
+            /*    ship->nextMoveB = 0x00;*/
+            /*}*/
+            /*else*/
+            /*{*/
+            /*    //Move right*/
+            /*    ship->nextMoveA = 0x00;*/
+            /*    ship->nextMoveB = 0x80;*/
+            /*}*/
+         else
+            {
+                //Dont move
+                ship->nextMoveA = 0x00;
+                ship->nextMoveB = 0x00;
+            }
+    }
+
+
+    /*for (int i = 0; i < numberOfObjetcs; i++)*/
+    /*{*/
+    /*    if (types[i] == 0x03)*/
+    /*    {*/
+    /*        if (h_positions[i] == ship->x_coordinate)*/
+    /*        {*/
+    /*            if (v_positions[i] <= (ship->y_coordinate + 0x02))*/
+    /*            {*/
+    /*                if (ship->x_coordinate == 0x08)*/
+    /*                {*/
+    /*                    //Move right*/
+    /*                    ship->nextMoveA = 0x00;*/
+    /*                    ship->nextMoveB = 0x80;*/
+    /*                }*/
+    /*                else*/
+    /*                {*/
+    /*                    //Move left*/
+    /*                    ship->nextMoveA = 0x01;*/
+    /*                    ship->nextMoveB = 0x00;*/
+    /*                }*/
+    /*                break;*/
+    /*            }*/
+    /*        }*/
+    /*        if (h_positions[i] == (ship->x_coordinate + 0x01))*/
+    /*        {*/
+    /*            if (v_positions[i] <= (ship->y_coordinate + 0x02))*/
+    /*            {*/
+    /*                if (ship->x_coordinate == 0x07)*/
+    /*                {*/
+    /*                    //Dont Move*/
+    /*                    ship->nextMoveA = 0x00;*/
+    /*                    ship->nextMoveB = 0x00;*/
+    /*                }*/
+    /*                else*/
+    /*                {*/
+    /*                    //Move left*/
+    /*                    ship->nextMoveA = 0x01;*/
+    /*                    ship->nextMoveB = 0x00;*/
+    /*                }*/
+    /*                break;*/
+    /*            }*/
+    /*        }*/
+    /*        if (h_positions[i] == (ship->x_coordinate - 0x01))*/
+    /*        {*/
+    /*            if (v_positions[i] <= (ship->y_coordinate + 0x02))*/
+    /*            {*/
+    /*                if (ship->x_coordinate == 0x08)*/
+    /*                {*/
+    /*                    //Dont Move*/
+    /*                    ship->nextMoveA = 0x00;*/
+    /*                    ship->nextMoveB = 0x00;*/
+    /*                }*/
+    /*                else*/
+    /*                {*/
+    /*                    //Move left*/
+    /*                    ship->nextMoveA = 0x01;*/
+    /*                    ship->nextMoveB = 0x00;*/
+    /*                }*/
+    /*                break;*/
+    /*            }*/
+    /*        }*/
+    /*    }*/
+    /*    if (types[i] == 0x02)*/
+    /*    {*/
+    /*        if (h_positions[i] == ship->x_coordinate)*/
+    /*        {*/
+    /*            //Shoot*/
+    /*            ship->nextMoveA = 0x01;*/
+    /*            ship->nextMoveB = 0x80;*/
+    /*        }*/
+    /*        if (h_positions[i] == (ship->x_coordinate + 0x01) ||*/
+    /*                h_positions[i] == (ship->x_coordinate - 0x01))*/
+    /*        {*/
+    /*            //Shoot*/
+    /*            ship->nextMoveA = 0x01;*/
+    /*            ship->nextMoveB = 0x80;*/
+    /*        }*/
+    /*        else if (h_positions[i] > ship->x_coordinate)*/
+    /*        {*/
+    /*            //Move left*/
+    /*            ship->nextMoveA = 0x01;*/
+    /*            ship->nextMoveB = 0x00;*/
+    /*        }*/
+    /*        else*/
+    /*        {*/
+    /*            //Move right*/
+    /*            ship->nextMoveA = 0x00;*/
+    /*            ship->nextMoveB = 0x80;*/
+    /*        }*/
+    /*    }*/
+    /*}*/
+    /*[>printf("Next MOVE: 0x%02X\n\n", ship->nextMoveA | ship->nextMoveB);<]*/
     return 0;
 }
 
-ShipCoordinates analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t frame, uint16_t input[],
+ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t frame, uint16_t input[],
         uint16_t SEQ, uint16_t numberOfObjetcs, unsigned char decriptedString[])
 {
     double objectsData = n - 3.0;
-    /*int isMyShipIntact = 0;*/
-    ShipCoordinates ship;
+    ShipData ship;
     ship.status = 0;
-    int *types = malloc(sizeof(int)*numberOfObjetcs);
-    int *h_positions = malloc(sizeof(int)*numberOfObjetcs);
-    int *v_positions = malloc(sizeof(int)*numberOfObjetcs);
+
+    ObjectsData objsInFrame;
+    objsInFrame.enemys = 0;
+    objsInFrame.enemysProjectiles = 0;
+    objsInFrame.h_pos_enemyProjec = malloc(sizeof(int)*numberOfObjetcs);
+    objsInFrame.v_pos_enemyProjec = malloc(sizeof(int)*numberOfObjetcs);
+    objsInFrame.h_pos_enemys = malloc(sizeof(int)*numberOfObjetcs);
+    objsInFrame.v_pos_enemys = malloc(sizeof(int)*numberOfObjetcs);
+
+
+    /*int *types = malloc(sizeof(int)*numberOfObjetcs);*/
+    /*int *h_positions = malloc(sizeof(int)*numberOfObjetcs);*/
+    /*int *v_positions = malloc(sizeof(int)*numberOfObjetcs);*/
 
 
     printf("\nCurrent Frame %d\n", frame >> 1);
@@ -158,9 +243,13 @@ ShipCoordinates analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint
         if(objectsData / numberOfObjetcs < 1.0)
         {
             ship.status = -1;
-            free(types);
-            free(h_positions);
-            free(v_positions);
+            free(objsInFrame.h_pos_enemyProjec);
+            free(objsInFrame.v_pos_enemyProjec);
+            free(objsInFrame.h_pos_enemys);
+            free(objsInFrame.v_pos_enemys);
+            /*free(types);*/
+            /*free(h_positions);*/
+            /*free(v_positions);*/
             return ship;
         }
 
@@ -178,66 +267,84 @@ ShipCoordinates analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint
                 ship.x_coordinate = decriptedString[(i * 3) + 1];
                 ship.y_coordinate = decriptedString[(i * 3) + 2];
             }
-            *(types + i - 1) = decriptedString[i * 3];
-            *(h_positions + i - 1) = decriptedString[(i * 3) + 1];
-            *(v_positions + i - 1) = decriptedString[(i * 3) + 2];
+            else if (decriptedString[i * 3] == 0x02)
+            {
+                *(objsInFrame.h_pos_enemys + objsInFrame.enemys) = decriptedString[(i * 3) + 1];
+                *(objsInFrame.v_pos_enemys + objsInFrame.enemys) = decriptedString[(i * 3) + 2];
+                objsInFrame.enemys++;
+
+            }
+            else if (decriptedString[i * 3] == 0x03)
+            {
+                *(objsInFrame.h_pos_enemyProjec + objsInFrame.enemysProjectiles) = decriptedString[(i * 3) + 1];
+                *(objsInFrame.v_pos_enemyProjec + objsInFrame.enemysProjectiles) = decriptedString[(i * 3) + 2];
+                objsInFrame.enemysProjectiles++;
+            }
+            /**(types + i - 1) = decriptedString[i * 3v];*/
+            /**(h_positions + i - 1) = decriptedString[(i * 3) + 1];*/
+            /**(v_positions + i - 1) = decriptedString[(i * 3) + 2];*/
         }
         printf("\n\n");
 
         if (ship.status != 0)
-            nextMove(numberOfObjetcs, types, h_positions, v_positions, &ship);
+            nextMove(numberOfObjetcs, &objsInFrame, &ship);
+            /*nextMove(numberOfObjetcs, types, h_positions, v_positions, &ship);*/
     }
     else
         ship.status = -1;
 
-    free(types);
-    free(h_positions);
-    free(v_positions);
+    free(objsInFrame.h_pos_enemyProjec);
+    free(objsInFrame.v_pos_enemyProjec);
+    free(objsInFrame.h_pos_enemys);
+    free(objsInFrame.v_pos_enemys);
+    /*free(types);*/
+    /*free(h_positions);*/
+    /*free(v_positions);*/
     return ship;
 }
 
-void readInputFromKeyboard(ShipCoordinates *ship)
-{
-    char choice;
-    printf("Enter your move: ");
-    scanf(" %c",&choice);
-    switch (choice) {
-      case 'w':
-      case 'W':
-        //shoot
-        ship->nextMoveA = 0x01;
-        ship->nextMoveB = 0x80;
-        break;
-      case 'a':
-      case 'A':
-         // Move left
-        ship->nextMoveA = 0x01;
-        ship->nextMoveB = 0x00;
-        break;
-      case 's':
-      case 'S':
-         // Dont Move
-        ship->nextMoveA = 0x00;
-        ship->nextMoveB = 0x00;
-        break;
-      case 'd':
-      case 'D':
-        // Move right
-        ship->nextMoveA = 0x00;
-        ship->nextMoveB = 0x80;
-        break;
-      case 'q':
-      case 'Q':
-        printf("\nQuitting...\n");
-        ship->nextMoveA = 0xFF;
-        ship->nextMoveB = 0xFF;
-        break;
-      default:
-        printf("\nWrong input...\n");
-        ship->nextMoveA = 0x00;
-        ship->nextMoveB = 0x00;
-    }
-}
+/*void readInputFromKeyboard(ShipData *ship)*/
+/*{*/
+/*    char choice;*/
+/*    printf("Enter your move: ");*/
+/*    scanf(" %c",&choice);*/
+/*    switch (choice) {*/
+/*      case 'w':*/
+/*      case 'W':*/
+/*        //shoot*/
+/*        ship->nextMoveA = 0x01;*/
+/*        ship->nextMoveB = 0x80;*/
+/*        break;*/
+/*      case 'a':*/
+/*      case 'A':*/
+/*         // Move left*/
+/*        ship->nextMoveA = 0x01;*/
+/*        ship->nextMoveB = 0x00;*/
+/*        break;*/
+/*      case 's':*/
+/*      case 'S':*/
+/*         // Dont Move*/
+/*        ship->nextMoveA = 0x00;*/
+/*        ship->nextMoveB = 0x00;*/
+/*        break;*/
+/*      case 'd':*/
+/*      case 'D':*/
+/*        // Move right*/
+/*        ship->nextMoveA = 0x00;*/
+/*        ship->nextMoveB = 0x80;*/
+/*        break;*/
+/*      case 'q':*/
+/*      case 'Q':*/
+/*        printf("\nQuitting...\n");*/
+/*        ship->nextMoveA = 0xFF;*/
+/*        ship->nextMoveB = 0xFF;*/
+/*        break;*/
+/*      default:*/
+/*        printf("\nWrong input...\n");*/
+/*        ship->nextMoveA = 0x00;*/
+/*        ship->nextMoveB = 0x00;*/
+/*    }*/
+/*}*/
 
 char* decryptString(char inpString[], const int len, uint8_t xorKey)
 {
@@ -278,7 +385,7 @@ int main() {
     unsigned int n, len;
     uint8_t xorkey;
     unsigned char *decriptedString ;
-    ShipCoordinates myShip;
+    ShipData myShip;
     myShip.nextMoveA = 0x00;
     myShip.nextMoveB = 0x00;
 
