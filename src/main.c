@@ -57,30 +57,84 @@ int nextMove(int numberOfObjetcs, ObjectsData *objsInFrame, ShipData *ship)
         {
             if (objsInFrame->v_pos_enemyProjec[i] == 0x01)
             {
-                if (ship->x_coordinate == 0x08)
+
+                int goLeft = 0; int goRight = 0;
+
+                for (int j = 0; j < objsInFrame->enemysProjectiles; j++)
+                {
+                    if (objsInFrame->h_pos_enemyProjec[i] < 0x08 &&
+                            objsInFrame->h_pos_enemyProjec[j] == objsInFrame->h_pos_enemyProjec[i] + 1)
+                    {
+                        if (objsInFrame->v_pos_enemyProjec[j] == 0x01)
+                        {
+                            printf("\nCASE A\n");
+                            goLeft++;
+
+                        }
+                    }
+                    if (objsInFrame->h_pos_enemyProjec[i] > 0x00 &&
+                            objsInFrame->h_pos_enemyProjec[j] == objsInFrame->h_pos_enemyProjec[i] - 1)
+                    {
+                        if (objsInFrame->v_pos_enemyProjec[j] == 0x01)
+                        {
+                            printf("\nCASE B\n");
+                            goRight++;
+
+                        }
+                    }
+                    if (ship->x_coordinate == 0x08)
+                    {
+                        printf("\nCASE C\n");
+                        //Move right
+                        ship->nextMoveA = 0x00;
+                        ship->nextMoveB = 0x80;
+                    }
+                    if (ship->x_coordinate == 0x00)
+                    {
+                        printf("\nCASE D\n");
+                        //Move left
+                        ship->nextMoveA = 0x01;
+                        ship->nextMoveB = 0x00;
+                    }
+                }
+
+                if (goRight == 0)
                 {
                     //Move right
                     ship->nextMoveA = 0x00;
                     ship->nextMoveB = 0x80;
                 }
-                else if (i != 0 && objsInFrame->v_pos_enemyProjec[i-1] == 0x01)
+                else if (goLeft == 0)
                 {
-                    //Move right
-                    ship->nextMoveA = 0x00;
-                    ship->nextMoveB = 0x80;
+                    //Move left
+                    ship->nextMoveA = 0x01;
+                    ship->nextMoveB = 0x00;
                 }
+
+                /*if (ship->x_coordinate == 0x08)*/
+                /*{*/
+                /*    //Move right*/
+                /*    ship->nextMoveA = 0x00;*/
+                /*    ship->nextMoveB = 0x80;*/
+                /*}*/
+                /*else if (i != 0 && objsInFrame->v_pos_enemyProjec[i-1] == 0x01)*/
+                /*{*/
+                /*    //Move right*/
+                /*    ship->nextMoveA = 0x00;*/
+                /*    ship->nextMoveB = 0x80;*/
+                /*}*/
                 /*else if (objsInFrame->v_pos_enemyProjec[i+1] == 0x01)*/
                 /*{*/
                 /*    //Move left*/
                 /*    ship->nextMoveA = 0x01;*/
                 /*    ship->nextMoveB = 0x00;*/
                 /*}*/
-                else
-                {
-                    //Move left
-                    ship->nextMoveA = 0x01;
-                    ship->nextMoveB = 0x00;
-                }
+                /*else*/
+                /*{*/
+                /*    //Move left*/
+                /*    ship->nextMoveA = 0x01;*/
+                /*    ship->nextMoveB = 0x00;*/
+                /*}*/
                  return 0;
             }
         }
@@ -208,7 +262,7 @@ int nextMove(int numberOfObjetcs, ObjectsData *objsInFrame, ShipData *ship)
     /*        }*/
     /*    }*/
     /*}*/
-    /*[>printf("Next MOVE: 0x%02X\n\n", ship->nextMoveA | ship->nextMoveB);<]*/
+    printf("Next MOVE: 0x%02X\n\n", ship->nextMoveA | ship->nextMoveB);
     return 0;
 }
 
@@ -429,6 +483,8 @@ int main() {
         SEQ = decriptedString[1] & 0x7F;
         numberOfObjetcs  = decriptedString[2];
 
+        myShip.nextMoveA = 0x00;
+        myShip.nextMoveB = 0x00;
         myShip = analyzeData(xorkey, buffer, n, frame, input, SEQ, numberOfObjetcs, decriptedString);
 
         if(myShip.status == 0)
@@ -447,7 +503,7 @@ int main() {
         /*    break;*/
         /*}*/
 
-        printf("Next Move: 0x%02X", myShip.nextMoveA | myShip.nextMoveB);
+        printf("Next Move: 0x%02X 0x%02X", myShip.nextMoveA, myShip.nextMoveB);
         inputPackage[0] = (((frame >> 1) + 0x01) << 1) + myShip.nextMoveA;
         inputPackage[1] = SEQ + myShip.nextMoveB;
         memset(&buffer, 0, n);
