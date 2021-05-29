@@ -282,6 +282,12 @@ int main() {
         SEQ = decriptedString[1] & 0x7F;
         numberOfObjetcs  = decriptedString[2];
 
+        if ( n != (3 * numberOfObjetcs +3) && frame != 0xFE)
+        {
+            printf("Wrong amount of data.\n");
+            continue;
+        }
+
         myShip.nextMoveA = 0x00;
         myShip.nextMoveB = 0x00;
         myShip = analyzeData(xorkey, buffer, n, frame, input, SEQ, numberOfObjetcs, decriptedString);
