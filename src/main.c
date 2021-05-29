@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdint.h>
+#include "log.h"
 
 #define PORT    1981
 #define MAXLINE 1024
@@ -41,10 +42,10 @@ void hex_print(unsigned char *in, size_t len)
 
     for(int i = 0; i < len; i++) {
         if(i % 10 == 0)
-            printf("\n");
-        printf("0x%02X ", *(in + i));
+            log_message("\n");
+        log_message("0x%02X ", *(in + i));
     }
-    printf("\n");
+    log_message("\n");
     return;
 }
 
@@ -137,16 +138,16 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
     objsInFrame.h_pos_enemys = malloc(sizeof(int)*numberOfObjetcs);
     objsInFrame.v_pos_enemys = malloc(sizeof(int)*numberOfObjetcs);
 
-    printf("\nCurrent Frame %d\n", frame >> 1);
-    printf("Input %d\n", input[0] | input[1]);
-    printf("SEQ 0x%02X\n", SEQ);
-    printf("Number Of Objects %d\n\n", numberOfObjetcs);
+    log_message("\nCurrent Frame %d\n", frame >> 1);
+    log_message("Input %d\n", input[0] | input[1]);
+    log_message("SEQ 0x%02X\n", SEQ);
+    log_message("Number Of Objects %d\n\n", numberOfObjetcs);
 
     if (numberOfObjetcs > 0x00)
     {
         if(objectsData / numberOfObjetcs < 1)
         {
-            printf("\nWrong data...\n");
+            log_message("\nWrong data...\n");
             ship.status = -1;
             free(objsInFrame.h_pos_enemyProjec);
             free(objsInFrame.v_pos_enemyProjec);
@@ -157,10 +158,10 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
 
         for (int i = 1 ; i <= numberOfObjetcs ; i++)
         {
-            printf("\tObject: %d\n", i);
-            printf("\t\tType: %d\n", decriptedString[i * 3]);
-            printf("\t\tH position: %d\n", decriptedString[(i * 3) + 1]);
-            printf("\t\tV position: %d\n", decriptedString[(i * 3) + 2]);
+            log_message("\tObject: %d\n", i);
+            log_message("\t\tType: %d\n", decriptedString[i * 3]);
+            log_message("\t\tH position: %d\n", decriptedString[(i * 3) + 1]);
+            log_message("\t\tV position: %d\n", decriptedString[(i * 3) + 2]);
 
             if (decriptedString[i * 3] == 0x00)
             {
@@ -183,7 +184,7 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
                 objsInFrame.enemysProjectiles++;
             }
         }
-        printf("\n\n");
+        log_message("\n\n");
 
         if (ship.status != 0)
             nextMove(numberOfObjetcs, &objsInFrame, &ship);
@@ -200,7 +201,7 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
 
 char* decryptString(char inpString[], const int len, uint8_t xorKey)
 {
-    printf("Decrypted String: ");
+    log_message("Decrypted String: ");
     for (int i = 0; i < len; i++)
         inpString[i] = inpString[i] ^ xorKey;
 
@@ -256,12 +257,12 @@ int main() {
                     MSG_WAITALL, (struct sockaddr *) &servaddr,
                     &len);
 
-        printf("Received message with size: %d\n\n", n);
+        log_message("Received message with size: %d\n\n", n);
 
         if (n == -1)
             continue;
 
-        printf("Server message: ");
+        log_message("Server message: ");
         hex_print((unsigned char *)buffer, n);
 
         xorkey = buffer[0] ^ inputPackage[0];
@@ -276,7 +277,7 @@ int main() {
 
         if ( n != (3 * numberOfObjetcs +3) && frame != 0xFE)
         {
-            printf("Wrong amount of data.\n");
+            log_message("Wrong amount of data.\n");
             continue;
         }
 
@@ -286,16 +287,22 @@ int main() {
 
         if(myShip.status == 0)
         {
-            printf("\n\n\t********** GAME OVER **********\n\n");
+            log_message("\n\n\t********** GAME OVER **********\n\n");
             break;
         }
         else if(myShip.status == -1)
             continue;
 
-        printf("Next Move: 0x%02X 0x%02X\n\n", myShip.nextMoveA, myShip.nextMoveB);
+        log_message("Next Move: 0x%02X 0x%02X\n\n", myShip.nextMoveA, myShip.nextMoveB);
         inputPackage[0] = (((frame >> 1) + 0x01) << 1) + myShip.nextMoveA;
         inputPackage[1] = SEQ + myShip.nextMoveB;
         memset(&buffer, 0, n);
+
+        if(frame == 0xFE)
+        {
+            log_message("\n\n\t********** YOU WON!! **********\n\n");
+            break;
+        }
     }
     close(sockfd);
 
