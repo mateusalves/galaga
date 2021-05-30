@@ -6,7 +6,7 @@ SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 
 BINDIR=bin
-BIN=$(BINDIR)/main
+BIN=$(BINDIR)/galaga
 SUBMITNAME=galaga_game.zip
 
 all: mkdirs $(BIN)
