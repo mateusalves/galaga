@@ -275,8 +275,10 @@ int main() {
         SEQ = decriptedString[1] & 0x7F;
         numberOfObjetcs  = decriptedString[2];
 
-        if ( n != (3 * numberOfObjetcs +3) && frame != 0xFE)
+        if (n != (3 * numberOfObjetcs + 3))
         {
+            if (frame == 0xFE)
+                frame--;
             log_message("Wrong amount of data.\n");
             continue;
         }
