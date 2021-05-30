@@ -7,7 +7,7 @@ OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 
 BINDIR=bin
 BIN=$(BINDIR)/galaga
-SUBMITNAME=galaga_game.zip
+SUBMITNAME=galaga_Mateus_Alves.zip
 
 all: mkdirs $(BIN)
 
@@ -30,4 +30,4 @@ clean:
 
 submit:
 	$(RM) $(SUBMITNAME)
-	zip $(SUBMITNAME) $(BIN)
+	zip $(SUBMITNAME) $(BIN) $(SRC)/* history.log Makefile
