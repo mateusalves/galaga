@@ -9,8 +9,12 @@
 #include <stdint.h>
 #include "log.h"
 
+#define IP_ADDR "18.219.219.134"
 #define PORT    1981
 #define MAXLINE 1024
+#define LASTFRAME 0xFE
+
+enum State {ERROR_ON_SHIP_SYSTEM = -1, SHIP_DESTROYED, SHIP_INTACT};
 
 typedef struct{
     int enemysProjectiles;
@@ -126,9 +130,9 @@ void nextMove(int numberOfObjetcs, ObjectsData *objsInFrame, ShipData *ship)
 ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t frame, uint16_t input[],
         uint16_t SEQ, uint16_t numberOfObjetcs, unsigned char decriptedString[])
 {
-    int objectsData = n - 3;
+    int objectsData = n - 3; //Amount of data related to the objects: type, vertical and horizontal positions
     ShipData ship;
-    ship.status = 0;
+    ship.status = SHIP_DESTROYED; //Assuming it was destroyed until we receive the right status
 
     ObjectsData objsInFrame;
     objsInFrame.enemys = 0;
@@ -139,6 +143,7 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
     objsInFrame.v_pos_enemys = malloc(sizeof(int)*numberOfObjetcs);
 
     log_message("\nCurrent Frame %d\n", frame >> 1);
+    log_message("Xorkey: 0x%02X\n", xorkey);
     log_message("Input %d\n", input[0] | input[1]);
     log_message("SEQ 0x%02X\n", SEQ);
     log_message("Number Of Objects %d\n\n", numberOfObjetcs);
@@ -148,7 +153,7 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
         if(objectsData / numberOfObjetcs < 1)
         {
             log_message("\nWrong data...\n");
-            ship.status = -1;
+            ship.status = ERROR_ON_SHIP_SYSTEM;
             free(objsInFrame.h_pos_enemyProjec);
             free(objsInFrame.v_pos_enemyProjec);
             free(objsInFrame.h_pos_enemys);
@@ -165,7 +170,7 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
 
             if (decriptedString[i * 3] == 0x00)
             {
-                ship.status = 1;
+                ship.status = SHIP_INTACT;
                 ship.type = 0x00;
                 ship.x_coordinate = decriptedString[(i * 3) + 1];
                 ship.y_coordinate = decriptedString[(i * 3) + 2];
@@ -186,11 +191,11 @@ ShipData analyzeData(uint8_t xorkey, char buffer[], unsigned int n,  uint16_t fr
         }
         log_message("\n\n");
 
-        if (ship.status != 0)
+        if (ship.status != SHIP_DESTROYED)
             nextMove(numberOfObjetcs, &objsInFrame, &ship);
     }
     else
-        ship.status = -1;
+        ship.status = ERROR_ON_SHIP_SYSTEM;
 
     free(objsInFrame.h_pos_enemyProjec);
     free(objsInFrame.v_pos_enemyProjec);
@@ -233,7 +238,7 @@ int main() {
     // Filling server information
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(PORT);
-    servaddr.sin_addr.s_addr = inet_addr("18.219.219.134");
+    servaddr.sin_addr.s_addr = inet_addr(IP_ADDR);
 
     unsigned int n, len;
     uint8_t xorkey;
@@ -247,7 +252,7 @@ int main() {
     uint16_t SEQ;
     uint16_t numberOfObjetcs;
 
-    while(frame != 0xFE)
+    while(frame != LASTFRAME)
     {
         sendto(sockfd, &inputPackage, sizeof(inputPackage),
             MSG_CONFIRM, (const struct sockaddr *) &servaddr,
@@ -277,7 +282,7 @@ int main() {
 
         if (n != (3 * numberOfObjetcs + 3))
         {
-            if (frame == 0xFE)
+            if (frame == LASTFRAME)
                 frame--;
             log_message("Wrong amount of data.\n");
             continue;
@@ -287,18 +292,18 @@ int main() {
         myShip.nextMoveB = 0x00;
         myShip = analyzeData(xorkey, buffer, n, frame, input, SEQ, numberOfObjetcs, decriptedString);
 
-        if(frame == 0xFE)
+        if(frame == LASTFRAME)
         {
             log_message("\n\n\t********** YOU WON!! **********\n\n");
             break;
         }
 
-        if(myShip.status == 0)
+        if(myShip.status == SHIP_DESTROYED)
         {
             log_message("\n\n\t********** GAME OVER **********\n\n");
             break;
         }
-        else if(myShip.status == -1)
+        else if(myShip.status == ERROR_ON_SHIP_SYSTEM)
             continue;
 
         log_message("Next Move: 0x%02X 0x%02X\n\n", myShip.nextMoveA, myShip.nextMoveB);
