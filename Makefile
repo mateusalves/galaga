@@ -9,10 +9,10 @@ BINDIR=bin
 BIN=$(BINDIR)/main
 SUBMITNAME=galaga_game.zip
 
-all:$(BIN)
+all: mkdirs $(BIN)
 
 release: CFLAGS=-Wall -O2 -DNDEBUG
-release: clean
+release: mkdirs clean
 release: $(BIN)
 
 $(BIN): $(OBJS)
@@ -20,6 +20,10 @@ $(BIN): $(OBJS)
 
 $(OBJ)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+mkdirs:
+	@mkdir -p $(OBJ)
+	@mkdir -p $(BINDIR)
 
 clean:
 	$(RM) -r $(BINDIR)/* $(OBJ)/*
