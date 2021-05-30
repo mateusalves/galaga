@@ -287,6 +287,12 @@ int main() {
         myShip.nextMoveB = 0x00;
         myShip = analyzeData(xorkey, buffer, n, frame, input, SEQ, numberOfObjetcs, decriptedString);
 
+        if(frame == 0xFE)
+        {
+            log_message("\n\n\t********** YOU WON!! **********\n\n");
+            break;
+        }
+
         if(myShip.status == 0)
         {
             log_message("\n\n\t********** GAME OVER **********\n\n");
@@ -299,14 +305,7 @@ int main() {
         inputPackage[0] = (((frame >> 1) + 0x01) << 1) + myShip.nextMoveA;
         inputPackage[1] = SEQ + myShip.nextMoveB;
         memset(&buffer, 0, n);
-
-        if(frame == 0xFE)
-        {
-            log_message("\n\n\t********** YOU WON!! **********\n\n");
-            break;
-        }
     }
     close(sockfd);
-
     return 0;
 }
